@@ -1,0 +1,26 @@
+{
+    "name": "satella/forbidden-words",
+    "description": "Filtro de palabras prohibidas multilenguaje: coincidencia por palabra completa, plurales, subcadenas CJK y enmascarado parcial.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "ext-mbstring": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "ForbiddenWords\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "ForbiddenWords\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "php tests/run.php"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
