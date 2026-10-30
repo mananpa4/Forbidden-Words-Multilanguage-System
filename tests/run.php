@@ -21,7 +21,9 @@ spl_autoload_register(static function (string $class): void {
     }
 });
 
+use ForbiddenWords\EvasionNormalizer;
 use ForbiddenWords\ForbiddenWords;
+use ForbiddenWords\MarketplaceDictionary;
 use ForbiddenWords\WordSet;
 
 $passed = 0;
@@ -102,6 +104,57 @@ check('lista vacia no censura', $empty->censor('casinos y apuestas'), 'casinos y
 // --- Capas ---
 check('conteo respeta removed', $filter->words()->count(), 10);
 check('parse separa comas y saltos', WordSet::parse("uno, dos\ntres,\n\ncuatro"), ['uno', 'dos', 'tres', 'cuatro']);
+
+// --- EvasionNormalizer ---
+check('leet c4s1n0 -> casino', EvasionNormalizer::normalizeToken('c4s1n0'), 'casino');
+check('separadores w.h.a.t.s -> whatsapp', EvasionNormalizer::normalizeToken('w.h.a.t.s'), 'whats');
+check('homoglifo cirillico о -> o', EvasionNormalizer::normalizeToken("c\u{0430}sino"), 'casino');
+check('invisible zero-width eliminado', EvasionNormalizer::normalizeToken("cas\u{200B}ino"), 'casino');
+check('fonetica guasap -> whatsapp', EvasionNormalizer::normalizeToken('guasap'), 'whatsapp');
+check('texto spaced letters', EvasionNormalizer::normalizeText('p a g a   p o r   f u e r a'), 'paga por fuera');
+check('evasion detecta zero width', EvasionNormalizer::detectEvasion("hola\u{200B}mundo"), ['ZERO_WIDTH']);
+check('evasion detecta separadores', EvasionNormalizer::detectEvasion('w.h.a.t.s'), ['SEPARATORS']);
+check('evasion limpia no detecta', EvasionNormalizer::detectEvasion('hola mundo'), []);
+
+// --- MarketplaceDictionary ---
+$market = MarketplaceDictionary::fromFile();
+
+// C4 OFF_PLATFORM_PAYMENT: block directo
+$r = $market->scan('Cancela el pedido y te pago por fuera con transferencia directa');
+check('marketplace block pago por fuera', $r['risk_level'], MarketplaceDictionary::RISK_HIGH);
+check('marketplace action block', $r['action'], MarketplaceDictionary::ACTION_BLOCK);
+check('marketplace categorias incluye OFF_PLATFORM', in_array('OFF_PLATFORM_PAYMENT', $r['matched_categories'], true), true);
+
+// C1 mensajeria sola: signal, no block
+$r = $market->scan('Tienes WhatsApp para dudas?');
+check('marketplace whatsapp sola no block', $r['action'] !== MarketplaceDictionary::ACTION_BLOCK, true);
+check('marketplace whatsapp sola risk no HIGH', $r['risk_level'] !== MarketplaceDictionary::RISK_HIGH, true);
+
+// Combinacion critica: mensaje + pago por fuera -> HIGH
+$r = $market->scan('Escribeme al whatsapp y te pago por fuera');
+check('marketplace combinacion contacto+pago HIGH', $r['risk_level'], MarketplaceDictionary::RISK_HIGH);
+
+// C8 insultos: signal (no block automatico por palabra sola)
+$r = $market->scan('Eres un pendejo');
+check('marketplace insulto signal', in_array('OFFENSES', $r['matched_categories'], true), true);
+
+// Evasion: p a g a p o r f u e r a
+$r = $market->scan('P a g a   p o r   f u e r a y te lo mando');
+check('marketplace evasion spaced letters block', $r['risk_level'], MarketplaceDictionary::RISK_HIGH);
+check('marketplace evasion detectada', $r['obfuscation_detected'], true);
+
+// Mensaje limpio
+$r = $market->scan('Hola, cuando llega mi pedido #12345?');
+check('marketplace limpio ALLOW', $r['action'], MarketplaceDictionary::ACTION_ALLOW);
+check('marketplace limpio score 0', $r['score'], 0);
+
+// C7 credenciales
+$r = $market->scan('Envia el codigo OTP que te llego por SMS');
+check('marketplace otp HIGH', $r['risk_level'], MarketplaceDictionary::RISK_HIGH);
+
+// C6 disputa: frase block
+$r = $market->scan('No abras el reclamo y te devuelvo el dinero');
+check('marketplace disputa block', $r['risk_level'], MarketplaceDictionary::RISK_HIGH);
 
 printf("\n%d/%d correctos", $passed, $passed + $failed);
 if ($failed > 0) {

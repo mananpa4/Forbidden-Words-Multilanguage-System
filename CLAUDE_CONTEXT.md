@@ -2,11 +2,11 @@
 
 Memoria viva del proyecto. Se actualiza cuando cambia el estado real, se toma una decisión técnica o aparece un problema. Lo permanente (arquitectura, convenciones, comandos) está en `CLAUDE.md`.
 
-**Última actualización:** 2026-07-16
+**Última actualización:** 2026-10-11
 
 ## Estado actual
 
-Primera versión funcional. La librería está completa y probada de forma aislada, pero **ningún sitio la consume todavía**: los tres siguen con su copia propia. La convergencia es el trabajo pendiente principal.
+Fase marketplace. La librería ya no es solo censura de groserías: incluye detección de comunicacion prohibida en marketplaces (contacto externo, pagos fuera de plataforma, manipulación de disputas, phishing, etc.) con clasificación de riesgo LOW/MEDIUM/HIGH y acciones ALLOW/ALLOW_WITH_WARNING/REVIEW/BLOCK alineadas al sistema Trust & Safety de SHOMEX. **Ningún sitio consume todavía la librería completa**: los tres siguen con su copia propia.
 
 Origen: el filtro de `chismy.com` detectaba `Casino` pero dejaba pasar `casinos`. La causa era que `Wo_ProfanityFilter()` compara el token con la lista mediante `isset($words[$lower])`, una coincidencia exacta. El arreglo se aplicó en `chismy.com` **y** se extrajo aquí como implementación de referencia.
 
@@ -20,7 +20,9 @@ Origen: el filtro de `chismy.com` detectaba `Casino` pero dejaba pasar `casinos`
 - Subcadenas CJK (Han, Hiragana, Katakana, Hangul), ordenadas de más larga a más corta.
 - Enmascarado parcial compatible con los tres sitios (`pendejo` → `pen****`).
 - `WordSet::parse()` para listas separadas por comas y saltos de línea.
-- 30 pruebas en verde, incluidos casos negativos y CJK.
+- **`EvasionNormalizer`** — normalización anti-evasión: leet (4=a, 3=e...), homoglifos cirílicos/griegos, caracteres de ancho cero, separadores intra-palabra (`w.h.a.t.s`), letras espaciadas (`p a g a   p o r   f u e r a`), variantes fonéticas (guasap/wasap→whatsapp). `detectEvasion()` reporta técnicas para `EVASION_BYPASS`.
+- **`MarketplaceDictionary`** — carga `dictionaries/marketplace-es.json` (C1-C12: mensajería externa, pagos fuera de plataforma, logística, disputas, datos sensibles, insultos, amenazas, reputación, phishing, desviación a competidores, contacto). `scan()` devuelve riesgo, acción, score, flags y censurado. Regla de combinación: contacto + pago externo → HIGH. Señales solas → LOW/MEDIUM.
+- 52 pruebas en verde, incluidos casos negativos, CJK, evasión y marketplace.
 
 ## En progreso
 
@@ -28,10 +30,11 @@ Nada activo.
 
 ## Tareas pendientes
 
-1. **Hacer que `chismy.com` consuma la librería.** Hoy tiene su propia copia corregida en `assets/includes/functions_profanity.php`. Es un WoWonder sin composer, así que hay que decidir entre incluir `src/` por `require` o publicar el paquete.
-2. **Migrar `dowdes.com` y `shomex.com.mx`.** Ambos son Laravel 8.2 con `App\Services\ProfanityFilter`; ahí sí hay composer y la migración es limpia.
-3. **Portugués.** El ecosistema apunta a Brasil (`BRL` ya está contemplado en Chismy Messenger). Reglas: `-ão`→`-ões`/`-ãos`, `-l`→`-is` (`papel`→`papéis`), `-m`→`-ns` (`homem`→`homens`).
-4. **Decidir el destino de `mask()`.** Enmascarar deja adivinar la palabra. Si algún día se quiere sustitución total, hay que coordinarlo con los tres sitios a la vez.
+1. **Hacer que `shomex.com.mx` consuma `MarketplaceDictionary::scan()` en chat/Q&A/reseñas** (ya identificados los puntos: MessageController, ConversationController, API chat, ProductQuery, Review, Feed).
+2. **Portar `EvasionNormalizer` + `MarketplaceDictionary` a NSFWJS-Detector** (packages/api/src/text/) para OCR de imágenes.
+3. **Hacer que `chismy.com` consuma la librería** (require directo, sin composer).
+4. **Portugués.** Reglas: `-ão`→`-ões`/`-ãos`, `-l`→`-is`, `-m`→`-ns`.
+5. **Ampliar `marketplace-es.json`** con más variantes regionales (centroamérica, Colombia, Argentina) tras calibrar con mensajes reales anonimizados.
 
 ## Decisiones técnicas tomadas
 
@@ -41,18 +44,23 @@ Nada activo.
 - **Sin PHPUnit ni dependencias de ejecución.** `chismy.com` es un WoWonder sin composer; si la librería dependiera de algo, no podría consumirla.
 - **CJK por subcadena.** Excepción consciente a la regla de palabra completa: sin espacios, la coincidencia por palabra nunca dispararía. Heredado de `shomex.com.mx`, que ya lo resolvía así.
 - **`mask()` con reparto mitad/mitad congelado.** Los tres sitios ya censuran así; cambiarlo los desincronizaría visualmente.
+- **Diccionario marketplace con severidad `signal` vs `block`.** Mencionar WhatsApp para comparar es legítimo; una frase de "paga por fuera" es infracción clara. La suma de señales decide el riesgo, no cada palabra aisladamente.
+- **`EvasionNormalizer` trabaja sobre copia normalizada, nunca borra el original.** El texto original se conserva para auditoría; la normalización es representación auxiliar para búsqueda de patrones.
+- **Colapsar solo letras sueltas espaciadas, no todos los espacios.** `preg_replace` agresivo de espacios fusiona palabras legítimas y destruye números de pedido; el regex exige grupos de `\p{L} ` unitarios con delimitadores.
 
 ## Problemas conocidos
 
 - **Tildes en plurales del español.** El plural desplaza la tilde (`avión`→`aviones`), así que de `aviones` se deriva `avion` sin tilde. Se emite también una variante acentuada en la última vocal, que cubre el caso común pero **no todos**. Si la lista trae una forma acentuada irregular, hay que añadirla a mano.
 - **Plurales irregulares no se derivan** (`children`, `people`, `mice`, `regímenes`). No siguen regla; si hacen falta, se añaden como entradas propias.
 - **Riesgo residual de falso positivo.** Si un plural legítimo deriva en una palabra prohibida, se censura. El límite de longitud 4 mitiga los casos frecuentes, pero no es demostrable que no queden.
-- **No hay normalización de evasiones** (`c4sino`, `c-a-s-i-n-o`, homoglifos cirílicos). La librería no intenta detectarlas hoy.
+- **`detectEvasion` es heurístico.** `LEET` se activa con dígitos pegados a letras; puede dar falsos positivos en textos con precios (`$50` no es evasión). mitigable con contexto.
+- **Frases marketplace no cubren todas las variantes.** "No abras el reclamo" vs "No abras un reclamo" requiere enumerar variantes; un matcher difuso futuro podría reducir la lista.
 - **La librería no está publicada** en Packagist ni referenciada por ningún sitio.
 
 ## Próximos pasos recomendados
 
-1. Migrar primero `shomex.com.mx`: es Laravel, tiene composer y su `ProfanityFilter` ya es el más cercano a esta implementación (de ahí salió el CJK).
-2. Comparar las tres copias antes de borrarlas — puede haber reglas útiles que no llegaron aquí.
-3. Añadir el portugués con sus casos negativos.
-4. Evaluar la normalización de evasiones solo si la moderación real la pide: es la clase de función que genera falsos positivos a mansalva.
+1. Integrar `MarketplaceDictionary` en `shomex.com.mx` (chat + Q&A + reseñas) — el sistema Trust & Safety del prompt lo exige.
+2. Portar `EvasionNormalizer` + `MarketplaceDictionary` al paquete TS de NSFWJS-Detector para OCR.
+3. Comparar las tres copias antes de borrarlas — puede haber reglas útiles que no llegaron aquí.
+4. Añadir el portugués con sus casos negativos.
+

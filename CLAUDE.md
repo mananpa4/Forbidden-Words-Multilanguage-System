@@ -54,10 +54,14 @@ Forbidden-Words-Multilanguage-System/
 ├── src/
 │   ├── ForbiddenWords.php          # fachada
 │   ├── WordSet.php                 # capas base/extra/removed + CJK
+│   ├── EvasionNormalizer.php       # anti-evasion: leet, homoglifos, separadores, spaced-letters
+│   ├── MarketplaceDictionary.php   # diccionario marketplace + scan() con riesgo/accion/flags
 │   ├── Pluralizer.php              # interfaz
 │   └── Language/
 │       ├── SpanishPluralizer.php
 │       └── EnglishPluralizer.php
+├── dictionaries/
+│   └── marketplace-es.json         # palabras/frases C1-C12 con severidad signal/block
 ├── tests/
 │   └── run.php                     # banco de pruebas sin dependencias
 ├── composer.json

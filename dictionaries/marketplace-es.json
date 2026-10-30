@@ -1,0 +1,163 @@
+{
+    "version": "1.0.0",
+    "description": "Diccionario de comunicacion prohibida para marketplaces (es-MX + en). Palabras y frases por categoria con severidad: signal = sola no infringe, necesita contexto; block = infraccion clara al coincidir. Basado en el sistema Trust & Safety de SHOMEX (categorias C1-C12).",
+    "categories": {
+        "EXTERNAL_MESSAGING": {
+            "label": "Mensajeria externa",
+            "severity_default": "signal",
+            "score": 2,
+            "words": [
+                "whatsapp", "wsp", "wasap", "wazap", "guasap", "wapp", "whats",
+                "telegram", "tg", "messenger", "fbchat", "instagram", "insta",
+                "discord", "skype", "signal", "viber", "snapchat", "faceTime",
+                "line", "wechat", "tiktok", "threads", "sms", "inbox"
+            ],
+            "phrases": [
+                "escribeme al", "mandame mensaje", "hablame por privado",
+                "contactame por", "agregame a contactos", "pasame tu wsp",
+                "te paso mi whatsapp", "hablemos por telegram", "bucame en insta",
+                "seguimos por fuera", "te mando mi usuario", "mismo numero de whatsapp",
+                "escribe al vendedor por", "continua por mensaje privado"
+            ]
+        },
+        "OFF_PLATFORM_PAYMENT": {
+            "label": "Pago fuera de la plataforma",
+            "severity_default": "block",
+            "score": 5,
+            "words": [
+                "zelle", "westernunion", "western", "moneygram", "binance",
+                "usdt", "bitcoin", "ethereum", "cripto", "criptomonedas",
+                "coDi"
+            ],
+            "phrases": [
+                "paga por fuera", "pago por fuera", "compra por fuera",
+                "transferencia directa", "a mi cuenta personal", "depoosito fuera",
+                "deposito fuera", "sin comision", "sin comisiones",
+                "mas barato si me pagas directo", "trato directo",
+                "cancela el pedido y te pago", "cancela el pedido y te lo pago",
+                "te mando una liga de pago", "no uses el checkout",
+                "evita pagar comisiones", "evitemos los cargos",
+                "no pagues aqui", "paga por whatsapp", "te devuelvo por otro medio",
+                "te vendo directamente", "compra en mi otra tienda",
+                "pago en efectivo por fuera", "te hago descuento directo"
+            ]
+        },
+        "LOGISTICS_EVASION": {
+            "label": "Evasion logistica",
+            "severity_default": "block",
+            "score": 5,
+            "phrases": [
+                "cancela la guia", "no uses la etiqueta", "entrega sin registrar",
+                "envio por fuera", "te lo llevo a tu domicilio y cancelamos",
+                "no registres la entrega", "te paso una guia falsa",
+                "declara el paquete como entregado", "usa otra etiqueta",
+                "entrega directa sin registro", "falsa guia de rastreo"
+            ]
+        },
+        "DISPUTE_MANIPULATION": {
+            "label": "Manipulacion de disputas",
+            "severity_default": "block",
+            "score": 5,
+            "phrases": [
+                "no abras un reclamo", "no abras el reclamo", "no abras reclamo", "noabrasreclamo", "no abras disputa", "noabrasdisputa",
+                "retira la disputa", "retira el reclamo", "cierra el caso",
+                "borra la evidencia", "borra la prueba",
+                "di que recibiste el producto", "marca como entregado un pedido que no",
+                "te compenso si retiras la queja", "no solicites la garantia",
+                "cambia el motivo de la devolucion", "no denuncies el fraude",
+                "cambia el motivo de la reclamacion", "no informes a soporte"
+            ]
+        },
+        "SENSITIVE_DATA": {
+            "label": "Datos sensibles",
+            "severity_default": "signal",
+            "score": 6,
+            "words": [
+                "cvv", "cvc", "otp", "nip", "password", "contrasena", "contraseña",
+                "claveprivada", "curp"
+            ],
+            "phrases": [
+                "enviame el codigo otp", "envia el codigo otp",
+                "codigo de verificacion por sms", "tu nip de tarjeta",
+                "clave de un solo uso", "codigo de recuperacion",
+                "datos completos de tu tarjeta", "foto de tu tarjeta"
+            ]
+        },
+        "OFFENSES": {
+            "label": "Insultos y lenguaje ofensivo",
+            "severity_default": "signal",
+            "score": 3,
+            "words": [
+                "pendejo", "pendeja", "idiota", "imbecil", "imbécil", "estupido",
+                "tarado", "baboso", "menso", "cabron", "cabrón", "culero", "mierda",
+                "jodete", "chingado", "chingada", "pinche", "desgraciado",
+                "puta", "puto", "mamon", "mamona", "verga", "ojete", "ratero",
+                "ladron", "ladrón", "estafador", "malnacido", "basura",
+                "hijodeputa", "hp", "malparido"
+            ],
+            "phrases": [
+                "hijo de puta", "hija de puta", "chetumal", "no sirves para nada",
+                "eres un ladrón", "eres un estafador", "vende humo"
+            ]
+        },
+        "THREATS": {
+            "label": "Amenazas y extorsion",
+            "severity_default": "block",
+            "score": 6,
+            "phrases": [
+                "te voy a matar", "te voy a golpear", "te voy a encontrar",
+                "se donde vives", "sé dónde vives", "te voy a hacer daño",
+                "te vas a arrepentir", "voy a publicar tus datos",
+                "te voy a hackear", "te voy a extorsionar",
+                "si no pagas te", "corre o pasa algo", "te caigo en tu casa"
+            ]
+        },
+        "REPUTATION_MANIPULATION": {
+            "label": "Manipulacion de reputacion",
+            "severity_default": "block",
+            "score": 4,
+            "phrases": [
+                "cinco estrellas a cambio", "cinco estrellas por un descuento",
+                "te regalo algo si me calificas", "te reembolso si borras tu resena",
+                "retira el comentario negativo", "cambia tu valoracion",
+                "te califico mal si no", "pago por una resena positiva",
+                "compra resenas", "resena falsa", "cuenta falsa para resenas",
+                "inflar reputacion", "manipular calificaciones"
+            ]
+        },
+        "PHISHING": {
+            "label": "Phishing y suplantacion",
+            "severity_default": "block",
+            "score": 6,
+            "phrases": [
+                "soporte oficial de shomex te escribe", "agente de shomex",
+                "tu cuenta sera suspendida si", "verifica tu cuenta en este enlace",
+                "inicia sesion aqui para liberar", "comision para liberar el paquete",
+                "pago retenido por verificar", "falso reembolso",
+                "necesitamos tu clave", "acceso remoto a tu dispositivo",
+                "desactiva tu proteccion", "actualiza tu metodo de pago aqui"
+            ]
+        },
+        "COMPETITOR_DIVERSION": {
+            "label": "Desviacion a competidores",
+            "severity_default": "signal",
+            "score": 3,
+            "phrases": [
+                "compra mi producto en amazon", "bucame en mercadolibre",
+                "paga alla", "mi publicacion en aliexpress",
+                "mi otra tienda es", "cancela este pedido y comprame en",
+                "te mando enlace externo para cerrar"
+            ]
+        },
+        "CONTACT_SHARE": {
+            "label": "Publicacion de datos de contacto",
+            "severity_default": "signal",
+            "score": 3,
+            "phrases": [
+                "mi numero es", "mi telefono es", "mi correo es",
+                "mi email es", "mi cel es", "mi celular es",
+                "mi whatsapp es", "mi wsp es"
+            ]
+        }
+    }
+}
